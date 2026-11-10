@@ -1,22 +1,26 @@
 # 西班牙车辆库存看板
 
-公开查看地址：<https://spain-inventory-shared-mao-1109.gsimonay.chatgpt.site/>
+领导查看：<https://maoshio.github.io/spain-inventory-dashboard/>
 
-管理员上传地址：<https://spain-inventory-shared-mao-1109.gsimonay.chatgpt.site/admin>
+每日上传：<https://maoshio.github.io/spain-inventory-dashboard/admin.html>
 
-管理员在 `/admin` 输入上传密码并选择每天的 Excel。浏览器逐 VIN 统计后，只把汇总结果发布到站点存储；领导打开公开地址即可查看最新数据，无须登录。刷新页面会重新读取已发布的汇总。
+在上传页点击“上传 Excel”，输入上传密码并选择最新 Excel。浏览器按 VIN 统计后发布汇总，查看页读取统一的最新数据，无须登录。
 
-看板按库龄、销售单号、发运单号、库房和车型展示。ES-sales 并入 Barcelona PDI。库龄按车辆入库时间计算。页面使用固定 1600×1050 画布并自动缩放到单个窗口，不要求滚动。
+## 数据与部署
 
-## 部署
+网页托管在 GitHub Pages，从 main 分支的根目录发布。上传及共享汇总数据仍由现有 Sites Worker 和 R2 存储提供，网页通过跨域请求访问后台。因此浏览器网址使用 github.io，但后台仍依赖 Sites。
 
-此仓库保存 Sites Worker 源码。在线上传和多人共享依赖 Worker 的 `/api/dashboard` 接口、`BUCKET` 存储绑定和 `ADMIN_TOKEN` 环境变量；单独使用 GitHub Pages 无法提供这些后台功能。
+仓库包含前端、Worker 源码和初始汇总快照，不包含上传密码或原始 VIN 明细。上传密码保存在后台 ADMIN_TOKEN 环境变量中。ES-sales 归入 Barcelona PDI；按逐车入库时间计算库龄。
+
+## 构建与验证
 
 ```sh
 node scripts/generate-worker.mjs
+node scripts/generate-pages.mjs
+node scripts/test-worker.mjs
+node scripts/test-pages-cors.mjs
 bash scripts/build.sh
 node scripts/validate-artifact.mjs
-node scripts/test-worker.mjs
 ```
 
-`page.html` 包含页面、前端逻辑和初始汇总快照。`scripts/generate-worker.mjs` 将其嵌入 `worker/index.js`。上传密码保存在站点环境变量中，不写入仓库。
+page.html 是页面源文件；index.html 和 admin.html 是生成的 GitHub Pages 页面。后台绑定 BUCKET，允许 https://maoshio.github.io 跨域访问；写入仍需上传密码。

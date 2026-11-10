@@ -301,6 +301,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   const seed = JSON.parse($('seed-data').textContent);
   const STORAGE_KEY = 'spain_inventory_dashboard_v1';
   const SHARED_MODE = window.SHARED_MODE || '';
+  const API_URL = (window.DASHBOARD_API_ORIGIN || '') + '/api/dashboard';
   let current = seed;
   let fitQueued = false;
   function fitDashboard() {
@@ -532,7 +533,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         if(SHARED_MODE!=='admin') throw new Error('此页面仅供查看，请使用管理员上传页。');
         const password=$('admin-password').value;
         if(!password) throw new Error('请先输入上传密码。');
-        const response=await fetch('/api/dashboard',{method:'PUT',headers:{'Content-Type':'application/json','Authorization':`Bearer ${password}`},body:JSON.stringify({data,meta})});
+        const response=await fetch(API_URL,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':`Bearer ${password}`},body:JSON.stringify({data,meta})});
         if(!response.ok) {
           const error=await response.json().catch(()=>({error:'发布失败'}));
           throw new Error(error.error||`发布失败 (${response.status})`);
@@ -568,7 +569,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
   if(SHARED_MODE) {
     const refresh=async()=>{
       try {
-        const response=await fetch('/api/dashboard',{cache:'no-store'});
+        const response=await fetch(API_URL,{cache:'no-store'});
         if(response.status===404) return;
         if(!response.ok) throw new Error(`HTTP ${response.status}`);
         const latest=await response.json();
