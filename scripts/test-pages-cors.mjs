@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import worker from '../worker/index.js';
+const origin='https://maoshio.github.io';
+const preflight=await worker.fetch(new Request('https://example.com/api/dashboard',{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'PUT','Access-Control-Request-Headers':'authorization,content-type'}}),{});
+assert.equal(preflight.status,204,'GitHub upload preflight must succeed');
+assert.equal(preflight.headers.get('Access-Control-Allow-Origin'),origin);
+assert.match(preflight.headers.get('Access-Control-Allow-Headers'),/Authorization/i);
+const denied=await worker.fetch(new Request('https://example.com/api/dashboard',{method:'PUT',headers:{Origin:origin,Authorization:'Bearer wrong'}}),{ADMIN_TOKEN:'test-secret',BUCKET:{}});
+assert.equal(denied.status,401);
+assert.equal(denied.headers.get('Access-Control-Allow-Origin'),origin,'Admin must be able to read password errors');
+const other=await worker.fetch(new Request('https://example.com/api/dashboard',{method:'OPTIONS',headers:{Origin:'https://unrelated.example','Access-Control-Request-Method':'PUT'}}),{});
+assert.equal(other.headers.get('Access-Control-Allow-Origin'),null);
+console.log('PASS GitHub Pages CORS and protected upload');

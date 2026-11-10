@@ -36,7 +36,7 @@ function validSummary(input) {
   return true;
 }
 
-export default {
+const app = {
   async fetch(request, env) {
     const url=new URL(request.url);
     if(url.pathname==='/api/dashboard') {
@@ -67,6 +67,23 @@ export default {
     }
     if(url.pathname==='/'||url.pathname==='/admin') return new Response(PAGE,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
     return new Response('Not Found',{status:404});
+  }
+};
+export default {
+  async fetch(request, env) {
+    const isApi = new URL(request.url).pathname === '/api/dashboard';
+    const origin = request.headers.get('Origin');
+    const allowed = isApi && origin === 'https://maoshio.github.io';
+    const response = isApi && request.method === 'OPTIONS'
+      ? new Response(null, {status: allowed ? 204 : 403})
+      : await app.fetch(request, env);
+    if (!allowed) return response;
+    const corsHeaders = new Headers(response.headers);
+    corsHeaders.set('Access-Control-Allow-Origin', origin);
+    corsHeaders.set('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS');
+    corsHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    corsHeaders.set('Vary', 'Origin');
+    return new Response(response.body, {status: response.status, headers: corsHeaders});
   }
 };
 `;
